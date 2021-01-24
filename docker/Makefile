@@ -28,8 +28,8 @@ go: ## run golang
 	$(DC) exec $(GOLANG) make
 gobuild: ## build golang
 	$(DC) exec $(GOLANG) make build
-	$(DC) exec $(GOLANG) make build-windows
-	$(DC) exec $(GOLANG) make build-mac
+#	$(DC) exec $(GOLANG) make build-windows
+#	$(DC) exec $(GOLANG) make build-mac
 gotest: ## test golang
 	$(DC) exec $(GOLANG) make test
 godep: ## run golang package manager
