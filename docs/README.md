@@ -3,7 +3,6 @@ kai-ab(AccountBook)
 
 * 家計簿作成支援コマンド
 
-
 | サブコマンド | 説明 | 備考 |
 | :---: | :--- | :--- |
 | `kai-ab init <path>` | pathにaccountbook用ディレクトリを生成します | |
