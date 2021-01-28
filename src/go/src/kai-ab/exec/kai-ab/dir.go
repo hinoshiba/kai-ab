@@ -7,9 +7,8 @@ import (
 )
 
 const (
-	PATH_ETC_TEMPLATE string = "./etc/template.tml"
-	PATH_ETC_ABBASE string = "./etc/accountbook.md.base"
-	PATH_ETC_FILTER string = "./etc/filter.tml"
+	PATH_ETC_TEMPLATE string = "./etc/template.yaml"
+	PATH_ETC_FILTER string = "./etc/auto_filter.csv"
 	PATH_ENV string = ".kai-ab.env"
 	PATH_REPORT string = "./var/report/"
 	PATH_CSV_BOTH string = "./var/csv/"
@@ -50,13 +49,6 @@ func cmd_init(path string) error {
 		return err
 	}
 	f_t.Close()
-
-	p_abbase := filepath.Join(path, PATH_ETC_ABBASE)
-	f_ab, err := os.Create(p_abbase)
-	if err != nil {
-		return err
-	}
-	f_ab.Close()
 
 	p_filter := filepath.Join(path, PATH_ETC_FILTER)
 	f_f, err := os.Create(p_filter)
