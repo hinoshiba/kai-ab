@@ -5,7 +5,15 @@ import (
 	"os"
 	"fmt"
 	"sync"
+	"time"
+	"strconv"
 	"encoding/csv"
+
+	_ "time/tzdata"
+)
+
+const (
+	FMT_TIME string = "2006/01/02"
 )
 
 type Csv struct {
@@ -22,13 +30,20 @@ type Csv struct {
 }
 
 type Options struct {
-	Header bool
+	Header   bool
+	Timezone *time.Location
 }
 
 func Open(path string, opt *Options) (*Csv, error) {
 	if opt == nil {
+		jst, err := time.LoadLocation("Asia/Tokyo")
+		if err != nil {
+			return nil, err
+		}
+
 		opt = &Options{
 			Header: true,
+			Timezone: jst,
 		}
 	}
 
@@ -42,6 +57,7 @@ func Open(path string, opt *Options) (*Csv, error) {
 	var header []string
 	var rows   []*Row
 
+	i := 0
 	for {
 		raw, err := r.Read()
 		if err == io.EOF {
@@ -51,6 +67,7 @@ func Open(path string, opt *Options) (*Csv, error) {
 			return nil, err
 		}
 
+		i++
 		if opt.Header {
 			if header == nil {
 				header = raw
@@ -58,7 +75,10 @@ func Open(path string, opt *Options) (*Csv, error) {
 			}
 		}
 
-		row := NewRow(raw)
+		row, err := NewRow(raw, opt.Timezone)
+		if err != nil {
+			return nil, fmt.Errorf("cannot load line '%v'. %s", i, err)
+		}
 		rows = append(rows, row)
 	}
 
@@ -180,14 +200,11 @@ func (self *Csv) GetIndexId(key string) (int, error) {
 	return id, nil
 }
 
-func (self *Csv) Rows() ([]*Row, error) {
+func (self *Csv) Rows() []*Row {
 	self.lock()
 	defer self.unlock()
 
-	if self.rows == nil {
-		return nil, fmt.Errorf("rows is not defined.")
-	}
-	return self.rows, nil
+	return self.rows
 }
 
 func (self *Csv) UpdateRows(rows []*Row) error {
@@ -231,15 +248,85 @@ func (self *Csv) unlock() {
 }
 
 type Row struct {
-	vals []string
+	date  time.Time
+	name  string
+	size  int64
+	class string
+	memo  string
 }
 
-func NewRow(raw []string) *Row {
-	return &Row{
-		vals: raw,
+func NewRow(raw []string, tz *time.Location) (*Row, error) {
+	if len(raw) < 3 {
+		return nil, fmt.Errorf("lack column less than 3.")
 	}
+
+	date, err := time.ParseInLocation(FMT_TIME, raw[0], tz)
+	if err != nil {
+		return nil, err
+	}
+	size, err := strconv.ParseInt(raw[2], 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	var class string
+	if len(raw) >= 4 {
+		class = raw[3]
+	}
+	var memo string
+	if len(raw) >= 5 {
+		memo = raw[4]
+	}
+
+	return &Row{
+		date: date,
+		name: raw[1],
+		size: size,
+		class: class,
+		memo: memo,
+	}, nil
+}
+
+func (self *Row) Date() time.Time {
+	return self.date
+}
+
+func (self *Row) Name() string {
+	return self.name
+}
+
+func (self *Row) Size() int64 {
+	return self.size
+}
+
+func (self *Row) Class() string {
+	return self.class
+}
+
+func (self *Row) Memo() string {
+	return self.memo
+}
+
+func (self *Row) SetClass(name string) {
+	self.class = name
+}
+
+func (self *Row) SetMemo(memo string) {
+	self.memo = memo
 }
 
 func (self *Row) Raw() []string {
-	return self.vals
+	return self.body2raw()
+}
+
+func (self *Row) body2raw() []string {
+	raw := make([]string, 5, 5)
+
+	raw[0] = self.date.Format(FMT_TIME)
+	raw[1] = self.name
+	raw[2] = strconv.FormatInt(self.size, 10)
+	raw[3] = self.class
+	raw[4] = self.memo
+
+	return raw
 }
