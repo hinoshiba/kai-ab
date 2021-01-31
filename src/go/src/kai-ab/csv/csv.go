@@ -135,6 +135,10 @@ func (self *Csv) save() error {
 	if err := self.fh.Truncate(0); err != nil {
 		return err
 	}
+	if _, err := self.fh.Seek(0,0); err != nil {
+		return err
+	}
+
 	if self.header == nil {
 		self.header = Header
 	}
