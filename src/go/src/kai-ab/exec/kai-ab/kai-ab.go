@@ -7,10 +7,6 @@ import (
 	"path/filepath"
 )
 
-const (
-	VERSION_TEMPLATE string = "v0.0.1"
-)
-
 var (
 	Cmd    string
 	CurDir string
@@ -19,7 +15,7 @@ var (
 func kaiab() error {
 	switch Cmd {
 	case "help":
-		fmt.Println("show https://github.com/hinoshiba/kai-ab")
+		fmt.Println(STR_HELP)
 
 	case "init":
 		return cmd_init(CurDir)

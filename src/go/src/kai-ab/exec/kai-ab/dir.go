@@ -6,18 +6,6 @@ import (
 	"path/filepath"
 )
 
-const (
-	PATH_ETC_TEMPLATE string = "./etc/template.yaml"
-	PATH_ETC_FILTER string = "./etc/auto_filter.csv"
-	PATH_ENV string = ".kai-ab.env"
-	PATH_REPORT string = "./var/report/"
-	PATH_CSV_BOTH string = "./var/csv/"
-	PATH_CSV_IN string = "./in/"
-	PATH_CSV_OUT string = "./out/"
-
-	PATH_FMT_DATE string = "200601" //yyyymm
-)
-
 func CreateDir(path string) error {
 	if !IsExist(path) {
 		return os.Mkdir(path, 0755)
