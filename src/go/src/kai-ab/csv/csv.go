@@ -16,12 +16,13 @@ const (
 	FMT_TIME string = "2006/01/02"
 )
 
+var Header []string = []string{"date", "name", "size", "category", "memo"}
+
 type Csv struct {
 	fpath  string
 	fh     *os.File
 
 	header []string
-	index  map[string]int
 
 	rows   []*Row
 
@@ -47,7 +48,7 @@ func Open(path string, opt *Options) (*Csv, error) {
 		}
 	}
 
-	fh, err := os.Open(path)
+	fh, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +71,7 @@ func Open(path string, opt *Options) (*Csv, error) {
 		i++
 		if opt.Header {
 			if header == nil {
-				header = raw
+				header = Header
 				continue
 			}
 		}
@@ -82,20 +83,10 @@ func Open(path string, opt *Options) (*Csv, error) {
 		rows = append(rows, row)
 	}
 
-	index := make(map[string]int)
-	if opt.Header {
-		if header != nil {
-			for i, k := range header {
-				index[k] = i
-			}
-		}
-	}
-
 	return &Csv{
 		fpath: path,
 		fh: fh,
 		header: header,
-		index: index,
 
 		rows: rows,
 
@@ -136,13 +127,15 @@ func (self *Csv) close() error {
 	self.fh = nil
 	self.rows = nil
 	self.header = nil
-	self.index = nil
 	return nil
 }
 
 func (self *Csv) save() error {
 	if err := self.fh.Truncate(0); err != nil {
 		return err
+	}
+	if self.header == nil {
+		self.header = Header
 	}
 
 	w := csv.NewWriter(self.fh)
@@ -182,24 +175,6 @@ func (self *Csv) Path() string {
 	return self.fpath
 }
 
-func (self *Csv) GetIndexId(key string) (int, error) {
-	self.lock()
-	defer self.unlock()
-
-	if !self.opt.Header {
-		return -1, fmt.Errorf("does not mode load of header.")
-	}
-	if self.index == nil {
-		return -1, fmt.Errorf("index is not defined.")
-	}
-
-	id, ok := self.index[key]
-	if !ok {
-		return -1, fmt.Errorf("undefined key, '%s'", key)
-	}
-	return id, nil
-}
-
 func (self *Csv) Rows() []*Row {
 	self.lock()
 	defer self.unlock()
@@ -211,31 +186,10 @@ func (self *Csv) UpdateRows(rows []*Row) error {
 	self.lock()
 	defer self.unlock()
 
-	if rows != nil {
+	if rows == nil {
 		return fmt.Errorf("cannot set nil pointer")
 	}
 	self.rows = rows
-	return nil
-}
-
-func (self *Csv) UpdateHeader(header []string) error {
-	self.lock()
-	defer self.unlock()
-
-	if header != nil {
-		return fmt.Errorf("cannot set nil pointer")
-	}
-	if !self.opt.Header {
-		return fmt.Errorf("does not mode of load the header.")
-	}
-
-	index := make(map[string]int)
-	for i, k := range header {
-		index[k] = i
-	}
-
-	self.index = index
-	self.header = header
 	return nil
 }
 
@@ -253,6 +207,16 @@ type Row struct {
 	size  int64
 	class string
 	memo  string
+}
+
+func CreateRow(date time.Time, name string, size int64, class string, memo string) *Row {
+	return &Row{
+		date: date,
+		name: name,
+		size: size,
+		class: class,
+		memo: memo,
+	}
 }
 
 func NewRow(raw []string, tz *time.Location) (*Row, error) {

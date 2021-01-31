@@ -14,16 +14,32 @@ const (
 	PATH_CSV_BOTH string = "./var/csv/"
 	PATH_CSV_IN string = "./in/"
 	PATH_CSV_OUT string = "./out/"
+
+	PATH_FMT_DATE string = "200601" //yyyymm
 )
 
-func isKaiabDir(path string) bool {
+func CreateDir(path string) error {
+	if !IsExist(path) {
+		return os.Mkdir(path, 0755)
+	}
+	return nil
+}
+
+func IsExist(path string) bool {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
+func IsKaiabDir(path string) bool {
 	p_env := filepath.Join(path, PATH_ENV)
 	_, err := os.Stat(p_env)
 	return err == nil
 }
 
 func cmd_init(path string) error {
-	if isKaiabDir(path) {
+	if IsKaiabDir(path) {
 		return fmt.Errorf("already init")
 	}
 
@@ -65,7 +81,6 @@ func cmd_init(path string) error {
 	if err := os.MkdirAll(p_csv, 0755); err != nil {
 		return err
 	}
-
 
 	return nil
 }

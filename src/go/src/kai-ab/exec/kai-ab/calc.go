@@ -83,7 +83,7 @@ func do_calc(srcs []string, e_path string) error {
 	log.Println("srcs: %s", srcs)
 	report_name := e_path[len(e_path)-4:len(e_path)]
 
-	if err := createDir(e_path); err != nil {
+	if err := CreateDir(e_path); err != nil {
 		return err
 	}
 
@@ -145,13 +145,6 @@ func calcMonth(target string) (*Report, error) {
 	}
 
 	return report, nil
-}
-
-func createDir(path string) error {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return os.Mkdir(path, 0755)
-	}
-	return nil
 }
 
 type Report struct {

@@ -20,37 +20,39 @@ func kaiab() error {
 	switch Cmd {
 	case "help":
 		fmt.Println("show https://github.com/hinoshiba/kai-ab")
+
 	case "init":
 		return cmd_init(CurDir)
+
 	case "template":
-		if !isKaiabDir(CurDir) {
+		if !IsKaiabDir(CurDir) {
 			return fmt.Errorf("Is not kai-ab directory, please 'kai-ab init'.")
 		}
 
-		//date := flag.Arg(1)
-		fmt.Println("havn't function, yet")
+		date := flag.Arg(1)
+		return cmd_template(date)
 
 	case "autofil":
-		if !isKaiabDir(CurDir) {
+		if !IsKaiabDir(CurDir) {
 			return fmt.Errorf("Is not kai-ab directory, please 'kai-ab init'.")
 		}
 
 		//path := flag.Arg(1)
 		fmt.Println("havn't function, yet")
 	case "mfil":
-		if !isKaiabDir(CurDir) {
+		if !IsKaiabDir(CurDir) {
 			return fmt.Errorf("Is not kai-ab directory, please 'kai-ab init'.")
 		}
 
 		//path := flag.Arg(1)
 		fmt.Println("havn't function, yet")
 	case "check":
-		if !isKaiabDir(CurDir) {
+		if !IsKaiabDir(CurDir) {
 			return fmt.Errorf("Is not kai-ab directory, please 'kai-ab init'.")
 		}
 		fmt.Println("havn't function, yet")
 	case "calc":
-		if !isKaiabDir(CurDir) {
+		if !IsKaiabDir(CurDir) {
 			return fmt.Errorf("Is not kai-ab directory, please 'kai-ab init'.")
 		}
 
