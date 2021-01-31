@@ -16,42 +16,27 @@ func kaiab() error {
 	switch Cmd {
 	case "help":
 		fmt.Println(STR_HELP)
-
 	case "init":
 		return cmd_init(CurDir)
+	}
 
+	if !IsKaiabDir(CurDir) {
+		return fmt.Errorf("Is not kai-ab directory, please 'kai-ab init'.")
+	}
+	switch Cmd {
 	case "template":
-		if !IsKaiabDir(CurDir) {
-			return fmt.Errorf("Is not kai-ab directory, please 'kai-ab init'.")
-		}
-
 		date := flag.Arg(1)
 		return cmd_template(date)
 
 	case "autofil":
-		if !IsKaiabDir(CurDir) {
-			return fmt.Errorf("Is not kai-ab directory, please 'kai-ab init'.")
-		}
-
 		//path := flag.Arg(1)
 		fmt.Println("havn't function, yet")
 	case "mfil":
-		if !IsKaiabDir(CurDir) {
-			return fmt.Errorf("Is not kai-ab directory, please 'kai-ab init'.")
-		}
-
 		//path := flag.Arg(1)
 		fmt.Println("havn't function, yet")
 	case "check":
-		if !IsKaiabDir(CurDir) {
-			return fmt.Errorf("Is not kai-ab directory, please 'kai-ab init'.")
-		}
 		fmt.Println("havn't function, yet")
 	case "calc":
-		if !IsKaiabDir(CurDir) {
-			return fmt.Errorf("Is not kai-ab directory, please 'kai-ab init'.")
-		}
-
 		return cmd_calc()
 	default:
 		return fmt.Errorf("undefined operation: '%s'", Cmd)
