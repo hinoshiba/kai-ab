@@ -3,7 +3,6 @@ package main
 import "log"
 
 import (
-	"os"
 	"fmt"
 	"path/filepath"
 )
@@ -36,7 +35,7 @@ func cmd_calc() error {
 }
 
 func getYears(csv_dir string) (map[string][]string, error) {
-	fnames, err := do_ls(csv_dir)
+	fnames, err := DoLs(csv_dir)
 	if err != nil {
 		return nil, err
 	}
@@ -58,25 +57,6 @@ func getYears(csv_dir string) (map[string][]string, error) {
 		years[year] = paths
 	}
 	return years, nil
-}
-
-func do_ls(path string) ([]string, error) {
-	d, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer d.Close()
-
-	fs, err := d.Readdir(-1)
-	if err != nil {
-		return nil, err
-	}
-
-	names := []string{}
-	for _, f := range fs {
-		names = append(names, f.Name())
-	}
-	return names, nil
 }
 
 func do_calc(srcs []string, e_path string) error {
@@ -105,11 +85,11 @@ func calcMonth(target string) (*Report, error) {
 	in_dir := filepath.Join(target, PATH_CSV_IN)
 	out_dir := filepath.Join(target, PATH_CSV_OUT)
 
-	in_fnames, err := do_ls(in_dir)
+	in_fnames, err := DoLs(in_dir)
 	if err != nil {
 		return nil, err
 	}
-	out_fnames, err := do_ls(out_dir)
+	out_fnames, err := DoLs(out_dir)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +104,7 @@ func calcMonth(target string) (*Report, error) {
 		defer in_c.Close()
 
 		for _, row := range in_c.Rows() {
-			if err := report.Add(row.Class(), row.Size() * SYMBOL_IN); err != nil {
+			if err := report.Add(row.Category(), row.Size() * SYMBOL_IN); err != nil {
 				return nil, err
 			}
 		}
@@ -138,7 +118,7 @@ func calcMonth(target string) (*Report, error) {
 		defer out_c.Close()
 
 		for _, row := range out_c.Rows() {
-			if err := report.Add(row.Class(), row.Size() * SYMBOL_OUT); err != nil {
+			if err := report.Add(row.Category(), row.Size() * SYMBOL_OUT); err != nil {
 				return nil, err
 			}
 		}
@@ -163,26 +143,26 @@ func NewReport(title string) *Report {
 	}
 }
 
-func (self *Report) Add(class string, size int64) error {
-	return self.add(class, size)
+func (self *Report) Add(category string, size int64) error {
+	return self.add(category, size)
 }
 
 func (self *Report) Merge(r *Report) {
-	for r_class, r_val := range r.cl_vals {
-		self.add(r_class, r_val)
+	for r_category, r_val := range r.cl_vals {
+		self.add(r_category, r_val)
 	}
 }
 
-func (self *Report) add(class string, size int64) error {
-	if class == "" {
-		return fmt.Errorf("cannot append value when empty class")
+func (self *Report) add(category string, size int64) error {
+	if category == "" {
+		return fmt.Errorf("cannot append value when empty category")
 	}
-	sum, ok := self.cl_vals[class]
+	sum, ok := self.cl_vals[category]
 	if !ok {
 		sum = 0
 	}
 	sum += size
-	self.cl_vals[class] = sum
+	self.cl_vals[category] = sum
 
 	if 0 <= size {
 		self.inc_sum += size

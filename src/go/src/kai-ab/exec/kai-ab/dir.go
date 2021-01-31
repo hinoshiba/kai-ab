@@ -26,6 +26,25 @@ func IsKaiabDir(path string) bool {
 	return err == nil
 }
 
+func DoLs(path string) ([]string, error) {
+	d, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer d.Close()
+
+	fs, err := d.Readdir(-1)
+	if err != nil {
+		return nil, err
+	}
+
+	names := []string{}
+	for _, f := range fs {
+		names = append(names, f.Name())
+	}
+	return names, nil
+}
+
 func cmd_init(path string) error {
 	if IsKaiabDir(path) {
 		return fmt.Errorf("already init")
@@ -54,7 +73,7 @@ func cmd_init(path string) error {
 	}
 	f_t.Close()
 
-	p_filter := filepath.Join(path, PATH_ETC_FILTER)
+	p_filter := filepath.Join(path, PATH_ETC_FILTERS)
 	f_f, err := os.Create(p_filter)
 	if err != nil {
 		return err

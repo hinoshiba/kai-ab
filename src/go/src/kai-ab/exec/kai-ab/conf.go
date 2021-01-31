@@ -35,3 +35,22 @@ func LoadTemplate(path string) (*Template, error) {
 	}
 	return &t, nil
 }
+
+type Filter struct {
+	Name     string `yaml:"name"`
+	Category string `yaml:"category"`
+}
+
+func LoadFilters(path string) ([]*Filter, error) {
+	c_path := filepath.Clean(path)
+	yval, err := ioutil.ReadFile(c_path)
+	if err != nil {
+		return nil, err
+	}
+
+	var f []*Filter = []*Filter{}
+	if err := yaml.Unmarshal(yval, &f); err != nil {
+		return nil, err
+	}
+	return f, nil
+}

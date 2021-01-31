@@ -54,6 +54,7 @@ func Open(path string, opt *Options) (*Csv, error) {
 	}
 
 	r := csv.NewReader(fh)
+	r.FieldsPerRecord = -1
 
 	var header []string
 	var rows   []*Row
@@ -205,16 +206,16 @@ type Row struct {
 	date  time.Time
 	name  string
 	size  int64
-	class string
+	category string
 	memo  string
 }
 
-func CreateRow(date time.Time, name string, size int64, class string, memo string) *Row {
+func CreateRow(date time.Time, name string, size int64, category string, memo string) *Row {
 	return &Row{
 		date: date,
 		name: name,
 		size: size,
-		class: class,
+		category: category,
 		memo: memo,
 	}
 }
@@ -233,9 +234,9 @@ func NewRow(raw []string, tz *time.Location) (*Row, error) {
 		return nil, err
 	}
 
-	var class string
+	var category string
 	if len(raw) >= 4 {
-		class = raw[3]
+		category = raw[3]
 	}
 	var memo string
 	if len(raw) >= 5 {
@@ -246,7 +247,7 @@ func NewRow(raw []string, tz *time.Location) (*Row, error) {
 		date: date,
 		name: raw[1],
 		size: size,
-		class: class,
+		category: category,
 		memo: memo,
 	}, nil
 }
@@ -263,16 +264,16 @@ func (self *Row) Size() int64 {
 	return self.size
 }
 
-func (self *Row) Class() string {
-	return self.class
+func (self *Row) Category() string {
+	return self.category
 }
 
 func (self *Row) Memo() string {
 	return self.memo
 }
 
-func (self *Row) SetClass(name string) {
-	self.class = name
+func (self *Row) SetCategory(name string) {
+	self.category = name
 }
 
 func (self *Row) SetMemo(memo string) {
@@ -289,7 +290,7 @@ func (self *Row) body2raw() []string {
 	raw[0] = self.date.Format(FMT_TIME)
 	raw[1] = self.name
 	raw[2] = strconv.FormatInt(self.size, 10)
-	raw[3] = self.class
+	raw[3] = self.category
 	raw[4] = self.memo
 
 	return raw

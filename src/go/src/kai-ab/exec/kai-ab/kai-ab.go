@@ -16,6 +16,7 @@ func kaiab() error {
 	switch Cmd {
 	case "help":
 		fmt.Println(STR_HELP)
+		return nil
 	case "init":
 		return cmd_init(CurDir)
 	}
@@ -29,8 +30,8 @@ func kaiab() error {
 		return cmd_template(date)
 
 	case "autofil":
-		//path := flag.Arg(1)
-		fmt.Println("havn't function, yet")
+		path := flag.Arg(1)
+		return cmd_autofilter(path)
 	case "mfil":
 		//path := flag.Arg(1)
 		fmt.Println("havn't function, yet")
@@ -39,7 +40,7 @@ func kaiab() error {
 	case "calc":
 		return cmd_calc()
 	default:
-		return fmt.Errorf("undefined operation: '%s'", Cmd)
+		return fmt.Errorf("undefined operation: '%s'\nshow 'kai-ab help'", Cmd)
 	}
 
 	return nil

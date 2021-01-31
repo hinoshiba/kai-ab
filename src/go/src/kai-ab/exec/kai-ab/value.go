@@ -4,7 +4,7 @@ const (
 	VERSION_TEMPLATE string = "v0.0.1.a"
 
 	PATH_ETC_TEMPLATE string = "./etc/template.yaml"
-	PATH_ETC_FILTER string = "./etc/auto_filter.csv"
+	PATH_ETC_FILTERS string = "./etc/auto_filters.yaml"
 	PATH_ENV string = ".kai-ab.env"
 	PATH_REPORT string = "./var/report/"
 	PATH_CSV_BOTH string = "./var/csv/"
