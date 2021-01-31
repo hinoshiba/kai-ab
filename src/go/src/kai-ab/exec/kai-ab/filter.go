@@ -7,21 +7,17 @@ import (
 
 import (
 	"kai-ab/csv"
+	"kai-ab/conf"
 )
 
+type Filter interface {
+	Do(string) error
+}
+
 func cmd_autofilter(path string) error {
-	fs_path := filepath.Join(CurDir, PATH_ETC_FILTERS)
-	fs, err := LoadFilters(fs_path)
+	af, err := NewAutoFilter(CurDir)
 	if err != nil {
 		return err
-	}
-	findex := make(map[string]string)
-	for _, f := range fs {
-		if _, ok := findex[f.Name]; ok {
-			return fmt.Errorf("due name at filters.yaml. '%s'", f.Name)
-		}
-
-		findex[f.Name] = f.Category
 	}
 
 	csv_dir := filepath.Join(CurDir, PATH_CSV_BOTH)
@@ -31,14 +27,18 @@ func cmd_autofilter(path string) error {
 	}
 	for _, mdir := range mdirs {
 		path = filepath.Join(csv_dir, mdir)
-		if err := do_filter(path, findex); err != nil {
+		if err := do_filter(path, af); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func do_filter(path string, findex map[string]string) error {
+func cmd_mfilter(path string) error {
+	return nil
+}
+
+func do_filter(path string, f Filter) error {
 	in_dir := filepath.Join(path, PATH_CSV_IN)
 	out_dir := filepath.Join(path, PATH_CSV_OUT)
 
@@ -52,78 +52,79 @@ func do_filter(path string, findex map[string]string) error {
 	}
 
 	for _, in_fname := range in_fnames {
-		changed := false
-
 		in_fpath := filepath.Join(in_dir, in_fname)
-		in_c, err := csv.Open(in_fpath, nil)
-		if err != nil {
-			return err
-		}
 
-		rows := in_c.Rows()
-		for i, row := range rows {
-			if row.Category() != "" {
-				continue
-			}
-
-			category, ok := findex[row.Name()]
-			if !ok {
-				continue
-			}
-
-			row.SetCategory(category)
-			rows[i] = row
-			changed = true
-		}
-
-		if !changed {
-			if err := in_c.Close(); err != nil {
-				return err
-			}
-			continue
-		}
-		in_c.UpdateRows(rows)
-		if err := in_c.CloseWithSave(); err != nil {
+		if err := f.Do(in_fpath); err != nil {
 			return err
 		}
 	}
 
 	for _, out_fname := range out_fnames {
-		changed := false
-
 		out_fpath := filepath.Join(out_dir, out_fname)
-		out_c, err := csv.Open(out_fpath, nil)
-		if err != nil {
-			return err
-		}
 
-		rows := out_c.Rows()
-		for i, row := range rows {
-			if row.Category() != "" {
-				continue
-			}
-
-			category, ok := findex[row.Name()]
-			if !ok {
-				continue
-			}
-
-			row.SetCategory(category)
-			rows[i] = row
-			changed = true
-		}
-
-		if !changed {
-			if err := out_c.Close(); err != nil {
-				return err
-			}
-			continue
-		}
-		out_c.UpdateRows(rows)
-		if err := out_c.CloseWithSave(); err != nil {
+		if err := f.Do(out_fpath); err != nil {
 			return err
 		}
 	}
 
+	return nil
+}
+
+type AutoFilter struct {
+	findex map[string]string
+}
+
+func NewAutoFilter(c_path string) (*AutoFilter, error) {
+	fs_path := filepath.Join(c_path, PATH_ETC_FILTERS)
+	fs, err := conf.LoadFilters(fs_path)
+	if err != nil {
+		return nil, err
+	}
+
+	findex := make(map[string]string)
+	for _, f := range fs {
+		if _, ok := findex[f.Name]; ok {
+			return nil, fmt.Errorf("due name at filters.yaml. '%s'", f.Name)
+		}
+
+		findex[f.Name] = f.Category
+	}
+
+	return &AutoFilter{findex: findex}, nil
+}
+
+func (self *AutoFilter) Do(path string) error {
+	c, err := csv.Open(path, nil)
+	if err != nil {
+		return err
+	}
+
+	rows := c.Rows()
+	changed := false
+	for i, row := range rows {
+		if row.Category() != "" {
+			continue
+		}
+
+		category, ok := self.findex[row.Name()]
+		if !ok {
+			continue
+		}
+
+		row.SetCategory(category)
+		rows[i] = row
+		changed = true
+	}
+
+	if !changed {
+		if err := c.Close(); err != nil {
+			return err
+		}
+		return nil
+	}
+	c.UpdateRows(rows)
+	if err := c.CloseWithSave(); err != nil {
+		return err
+	}
 	return nil
 }

@@ -8,6 +8,7 @@ import (
 
 import (
 	"kai-ab/csv"
+	"kai-ab/conf"
 )
 
 func cmd_template(date string) error {
@@ -20,7 +21,7 @@ func cmd_template(date string) error {
 	}
 
 	template_path := filepath.Join(CurDir, PATH_ETC_TEMPLATE)
-	template, err := LoadTemplate(template_path)
+	template, err := conf.LoadTemplate(template_path)
 	if err != nil {
 		return err
 	}
