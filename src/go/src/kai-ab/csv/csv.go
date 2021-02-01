@@ -260,6 +260,10 @@ func (self *Row) Date() time.Time {
 	return self.date
 }
 
+func (self *Row) DateString() string {
+	return self.date.Format(FMT_TIME)
+}
+
 func (self *Row) Name() string {
 	return self.name
 }

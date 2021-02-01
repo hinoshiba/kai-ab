@@ -33,8 +33,8 @@ func kaiab() error {
 		path := flag.Arg(1)
 		return cmd_autofilter(path)
 	case "mfil":
-		//path := flag.Arg(1)
-		fmt.Println("havn't function, yet")
+		path := flag.Arg(1)
+		return cmd_mfilter(path)
 	case "check":
 		fmt.Println("havn't function, yet")
 	case "calc":
