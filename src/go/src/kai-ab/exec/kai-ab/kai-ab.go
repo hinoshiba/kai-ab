@@ -36,7 +36,7 @@ func kaiab() error {
 		path := flag.Arg(1)
 		return cmd_mfilter(path)
 	case "check":
-		fmt.Println("havn't function, yet")
+		return cmd_check()
 	case "calc":
 		return cmd_calc()
 	default:

@@ -103,7 +103,7 @@ func (self *ManualFilter) Do(path string) error {
 	changed := false
 	for i, row := range rows {
 
-		fmt.Printf("%s, %s, %v | Category: %s | Memo: %s\n",
+		fmt.Printf("[ %s, %s, %v | Category: %s | Memo: %s ] ",
 				row.DateString(), row.Name(), row.Size(), row.Category(), row.Memo())
 		if row.Category() != "" {
 			if str := getstr("Update?[y/N(any key)]"); str != "y" {
@@ -119,11 +119,17 @@ func (self *ManualFilter) Do(path string) error {
 				continue
 			}
 
+			if ans := getstr("Are you sure?[y/N(any)]"); ans != "y" {
+				continue
+			}
+
 			break
 		}
 
 		row.SetCategory(category)
 		rows[i] = row
+		fmt.Printf("Updated !!! [ %s, %s, %v | Category: %s | Memo: %s ]\n",
+				row.DateString(), row.Name(), row.Size(), row.Category(), row.Memo())
 		changed = true
 	}
 
