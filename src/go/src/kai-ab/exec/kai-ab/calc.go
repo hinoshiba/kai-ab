@@ -1,9 +1,9 @@
 package main
 
-import "log"
-
 import (
+	"os"
 	"fmt"
+	"sort"
 	"path/filepath"
 )
 
@@ -26,11 +26,109 @@ func cmd_calc() error {
 
 	for e_name, srcs := range targets {
 		e_path := filepath.Join(CurDir, PATH_REPORT, e_name)
+		r_name := e_name[len(e_name)-4:len(e_name)]
 
-		if err := do_calc(srcs, e_path); err != nil {
+		r, err := do_calc(r_name, srcs)
+		if err != nil {
+			return err
+		}
+
+		if err := do_export(e_path, r); err != nil {
 			return err
 		}
 	}
+	return nil
+}
+
+func do_calc(name string, srcs []string) (*Report, error) {
+	report := NewReport(name)
+	for _, src := range srcs {
+		r, err := calcMonth(src)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := report.Invite(r); err != nil {
+			return nil, err
+		}
+	}
+	return report, nil
+}
+
+func do_export(path string, ry *Report) error {
+	fpath := path + ".md"
+
+	header := "|項目|01|02|03|04|05|06|07|08|09|10|11|12|\n"
+	header += "|:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n"
+
+	r_in := "|収入|"
+	r_dec := "|支出|"
+	r_sum := "|黒字値|"
+
+	keys := ry.Keys()
+	r_ks := make(map[string]string)
+
+	f_list := "## 計算元ファイル\n"
+
+	rms := ry.Childs()
+	for _, rm := range rms {
+		r_in += fmt.Sprintf("%v|", rm.IncSum())
+		r_dec += fmt.Sprintf("%v|", rm.DecSum())
+		r_sum += fmt.Sprintf("%v|", rm.IncSum() - rm.DecSum())
+
+		for _, k := range keys {
+			line, ok := r_ks[k]
+			if !ok {
+				line = fmt.Sprintf("|%s|", k)
+			}
+			val, ok := rm.GetDetail(k)
+			if !ok {
+				line += "-|"
+			}
+			line += fmt.Sprintf("%v|", val)
+			r_ks[k] = line
+		}
+
+		f_list += "\n### " + rm.Title() + "\n"
+		for _, csv_r := range rm.Childs() {
+
+			rel, err := filepath.Rel(fpath, csv_r.Title())
+			if err != nil {
+				return err
+			}
+			name := filepath.Base(rel)
+			f_list += fmt.Sprintf("* [%s](%s) 収入(%v)-支出(%v)=黒字値(%v)\n",
+								name, rel, csv_r.IncSum(), csv_r.DecSum(), csv_r.IncSum() - csv_r.DecSum())
+		}
+	}
+
+	padval := ""
+	pdding_size := 12 - len(rms)
+	for i := 0; i < pdding_size; i++ {
+		padval += "-|"
+	}
+
+	r_str := ry.Title() + "\n===\n\n"
+	r_str += header
+	r_str += r_in + padval + "\n"
+	r_str += r_dec + padval + "\n"
+	r_str += r_sum + padval + "\n"
+	r_str += "## 詳細\n"
+	r_str += header
+	for _, line := range r_ks {
+		r_str += line + padval + "\n"
+	}
+	r_str += f_list
+
+	f, err := os.OpenFile(fpath, os.O_RDWR|os.O_CREATE, 0755)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	if _, err := f.WriteString(r_str); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -59,27 +157,6 @@ func getYears(csv_dir string) (map[string][]string, error) {
 	return years, nil
 }
 
-func do_calc(srcs []string, e_path string) error {
-	log.Println("srcs: %s", srcs)
-	report_name := e_path[len(e_path)-4:len(e_path)]
-
-	if err := CreateDir(e_path); err != nil {
-		return err
-	}
-
-	report := NewReport(report_name)
-	for _, src := range srcs {
-		r, err := calcMonth(src)
-		if err != nil {
-			return err
-		}
-
-		report.Merge(r)
-	}
-	log.Println(report)
-	return nil
-}
-
 func calcMonth(target string) (*Report, error) {
 	report_name := target[len(target)-6:len(target)]
 	in_dir := filepath.Join(target, PATH_CSV_IN)
@@ -103,10 +180,14 @@ func calcMonth(target string) (*Report, error) {
 		}
 		defer in_c.Close()
 
+		in_repo := NewReport(in_fpath)
 		for _, row := range in_c.Rows() {
-			if err := report.Add(row.Category(), row.Size() * SYMBOL_IN); err != nil {
+			if err := in_repo.Add(row.Category(), row.Size() * SYMBOL_IN); err != nil {
 				return nil, err
 			}
+		}
+		if err := report.Invite(in_repo); err != nil {
+			return nil, err
 		}
 	}
 	for _, out_fname := range out_fnames {
@@ -117,10 +198,14 @@ func calcMonth(target string) (*Report, error) {
 		}
 		defer out_c.Close()
 
+		out_repo := NewReport(out_fpath)
 		for _, row := range out_c.Rows() {
-			if err := report.Add(row.Category(), row.Size() * SYMBOL_OUT); err != nil {
+			if err := out_repo.Add(row.Category(), row.Size() * SYMBOL_OUT); err != nil {
 				return nil, err
 			}
+		}
+		if err := report.Invite(out_repo); err != nil {
+			return nil, err
 		}
 	}
 
@@ -132,6 +217,8 @@ type Report struct {
 	cl_vals map[string]int64
 	inc_sum int64
 	dec_sum int64
+
+	childs  []*Report
 }
 
 func NewReport(title string) *Report {
@@ -140,17 +227,57 @@ func NewReport(title string) *Report {
 		dec_sum: 0,
 		title: title,
 		cl_vals: make(map[string]int64),
+		childs: make([]*Report, 0),
 	}
+}
+
+func (self *Report) Title() string {
+	return self.title
 }
 
 func (self *Report) Add(category string, size int64) error {
 	return self.add(category, size)
 }
 
-func (self *Report) Merge(r *Report) {
+func (self *Report) Invite(r *Report) error {
 	for r_category, r_val := range r.cl_vals {
-		self.add(r_category, r_val)
+		if err := self.add(r_category, r_val); err != nil {
+			return err
+		}
 	}
+	self.childs = append(self.childs, r)
+	return nil
+}
+
+func (self *Report) Childs() []*Report {
+	sort.SliceStable(self.childs, func(i, j int) bool { return self.childs[i].Title() < self.childs[j].Title()})
+	return self.childs
+}
+
+func (self *Report) Keys() []string {
+	keys := []string{}
+	for key, _ := range self.cl_vals {
+		keys = append(keys, key)
+	}
+
+	sort.SliceStable(keys, func(i, j int) bool { return keys[i] < keys[j]})
+	return keys
+}
+
+func (self *Report) GetDetail(key string) (int64, bool) {
+	val, ok := self.cl_vals[key]
+	if !ok {
+		return 0, false
+	}
+	return val, true
+}
+
+func (self *Report) IncSum() int64 {
+	return self.inc_sum
+}
+
+func (self *Report) DecSum() int64 {
+	return self.dec_sum
 }
 
 func (self *Report) add(category string, size int64) error {
