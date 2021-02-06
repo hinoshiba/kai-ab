@@ -1,7 +1,7 @@
 package main
 
 const (
-	VERSION_TEMPLATE string = "v0.0.1.a"
+	VERSION_TEMPLATE string = "v0.0.1"
 
 	PATH_ETC_TEMPLATE string = "./etc/template.yaml"
 	PATH_ETC_FILTERS string = "./etc/auto_filters.yaml"
@@ -13,7 +13,7 @@ const (
 
 	PATH_FMT_DATE string = "200601" //yyyymm
 
-	STR_HELP string = `
+	STR_HELP string = VERSION_TEMPLATE + `
 Usage: kai-ab <sub command> [<subcommand option>]
 Support of categorize and calc account book.
 
