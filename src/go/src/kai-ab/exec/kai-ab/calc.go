@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"path/filepath"
+	"strconv"
 )
 
 import (
@@ -68,24 +69,42 @@ func do_export(path string, ry *Report) error {
 	keys := ry.Keys()
 	r_ks := make(map[string]string)
 
-	f_list := "## 計算元ファイル\n"
 
 	rms := ry.Childs()
+
+	if len(rms) < 1 {
+		return fmt.Errorf("'%s' haven't report", ry.Title())
+	}
+	h_rm := rms[0]
+	m, err := strconv.Atoi(h_rm.Title()[4:])
+	if err != nil {
+		return err
+	}
+	h_padval := ""
+
+	for i := m; i > 1; i-- {
+		h_padval += "-|"
+	}
+	r_in  += h_padval
+	r_dec += h_padval
+	r_sum += h_padval
+
+	f_list := "## 計算元ファイル\n"
 	for _, rm := range rms {
-		r_in += fmt.Sprintf("%v|", rm.IncSum())
-		r_dec += fmt.Sprintf("%v|", rm.DecSum())
-		r_sum += fmt.Sprintf("%v|", rm.IncSum() - rm.DecSum())
+		r_in += fmt.Sprintf("%s|", nfmt(rm.IncSum()))
+		r_dec += fmt.Sprintf("%s|", nfmt(rm.DecSum()))
+		r_sum += fmt.Sprintf("%s|", nfmt(rm.IncSum() - rm.DecSum()))
 
 		for _, k := range keys {
 			line, ok := r_ks[k]
 			if !ok {
-				line = fmt.Sprintf("|%s|", k)
+				line = fmt.Sprintf("|%s|%s", k, h_padval)
 			}
 			val, ok := rm.GetDetail(k)
 			if !ok {
 				line += "-|"
 			}
-			line += fmt.Sprintf("%v|", val)
+			line += fmt.Sprintf("%v|", nfmt(val))
 			r_ks[k] = line
 		}
 
@@ -97,8 +116,9 @@ func do_export(path string, ry *Report) error {
 				return err
 			}
 			name := filepath.Base(rel)
-			f_list += fmt.Sprintf("* [%s](%s) 収入(%v)-支出(%v)=黒字値(%v)\n",
-								name, rel, csv_r.IncSum(), csv_r.DecSum(), csv_r.IncSum() - csv_r.DecSum())
+			f_list += fmt.Sprintf("* [%s](%s)\n    * 収入(%s) - 支出(%s) = 黒字値(%s)\n",
+								name, rel, nfmt(csv_r.IncSum()), nfmt(csv_r.DecSum()),
+								nfmt(csv_r.IncSum() - csv_r.DecSum()))
 		}
 	}
 
@@ -120,7 +140,7 @@ func do_export(path string, ry *Report) error {
 	}
 	r_str += f_list
 
-	f, err := os.OpenFile(fpath, os.O_RDWR|os.O_CREATE, 0755)
+	f, err := os.OpenFile(fpath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		return err
 	}
@@ -297,4 +317,18 @@ func (self *Report) add(category string, size int64) error {
 		self.dec_sum += size
 	}
 	return nil
+}
+
+func nfmt(num int64) string {
+	s := fmt.Sprintf("%d", num)
+	fnum := ""
+	pos := 0
+	for i := len(s) - 1; i >= 0; i-- {
+		if pos > 2 && pos % 3 == 0 {
+			fnum = fmt.Sprintf(",%s", fnum)
+		}
+		fnum = fmt.Sprintf("%s%s", string(s[i]), fnum)
+		pos++
+	}
+	return fnum
 }
