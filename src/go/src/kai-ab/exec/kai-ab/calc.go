@@ -93,7 +93,7 @@ func do_export(path string, ry *Report) error {
 	for _, rm := range rms {
 		r_in += fmt.Sprintf("%s|", nfmt(rm.IncSum()))
 		r_dec += fmt.Sprintf("%s|", nfmt(rm.DecSum()))
-		r_sum += fmt.Sprintf("%s|", nfmt(rm.IncSum() - rm.DecSum()))
+		r_sum += fmt.Sprintf("%s|", nfmt(rm.IncSum() + rm.DecSum()))
 
 		for _, k := range keys {
 			line, ok := r_ks[k]
@@ -111,14 +111,14 @@ func do_export(path string, ry *Report) error {
 		f_list += "\n### " + rm.Title() + "\n"
 		for _, csv_r := range rm.Childs() {
 
-			rel, err := filepath.Rel(fpath, csv_r.Title())
+			rel, err := filepath.Rel(filepath.Dir(fpath), csv_r.Title())
 			if err != nil {
 				return err
 			}
 			name := filepath.Base(rel)
 			f_list += fmt.Sprintf("* [%s](%s)\n    * 収入(%s) - 支出(%s) = 黒字値(%s)\n",
 								name, rel, nfmt(csv_r.IncSum()), nfmt(csv_r.DecSum()),
-								nfmt(csv_r.IncSum() - csv_r.DecSum()))
+								nfmt(csv_r.IncSum() + csv_r.DecSum()))
 		}
 	}
 
