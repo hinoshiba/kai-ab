@@ -135,8 +135,14 @@ func do_export(path string, ry *Report) error {
 	r_str += r_sum + padval + "\n"
 	r_str += "## 詳細\n"
 	r_str += header
-	for _, line := range r_ks {
-		r_str += line + padval + "\n"
+
+	r_ks_idx := []string{}
+	for k, _ := range r_ks {
+		r_ks_idx = append(r_ks_idx, k)
+	}
+	sort.SliceStable(r_ks_idx, func(i, j int) bool { return r_ks_idx[i] < r_ks_idx[j]})
+	for _, k := range r_ks_idx {
+		r_str += r_ks[k] + padval + "\n"
 	}
 	r_str += f_list
 
