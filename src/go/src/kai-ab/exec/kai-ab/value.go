@@ -1,7 +1,7 @@
 package main
 
 const (
-	VERSION_TEMPLATE string = "v0.0.1"
+	VERSION_TEMPLATE string = "v0.0.2"
 
 	PATH_ETC_TEMPLATE string = "./etc/template.yaml"
 	PATH_ETC_FILTERS string = "./etc/auto_filters.yaml"
