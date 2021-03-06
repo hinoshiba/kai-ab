@@ -102,7 +102,7 @@ func do_export(path string, ry *Report) error {
 			}
 			val, ok := rm.GetDetail(k)
 			if !ok {
-				line += "-|"
+				val = 0
 			}
 			line += fmt.Sprintf("%v|", nfmt(val))
 			r_ks[k] = line
