@@ -102,6 +102,9 @@ func (self *ManualFilter) Do(path string) error {
 	rows := c.Rows()
 	changed := false
 	for i, row := range rows {
+		if row.Category() != "" {
+			continue
+		}
 
 		fmt.Printf("[ %s, %s, %v | Category: %s | Memo: %s ] ",
 				row.DateString(), row.Name(), row.Size(), row.Category(), row.Memo())
@@ -125,8 +128,18 @@ func (self *ManualFilter) Do(path string) error {
 
 			break
 		}
+		var memo string
+		for {
+			memo = getstr("enter Memo > ")
+			if ans := getstr("Are you sure?[y/N(any)]"); ans != "y" {
+				continue
+			}
+
+			break
+		}
 
 		row.SetCategory(category)
+		row.SetMemo(memo)
 		rows[i] = row
 		fmt.Printf("Updated !!! [ %s, %s, %v | Category: %s | Memo: %s ]\n",
 				row.DateString(), row.Name(), row.Size(), row.Category(), row.Memo())
