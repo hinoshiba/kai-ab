@@ -320,6 +320,12 @@ func (self *Report) add(category string, size int64) error {
 }
 
 func nfmt(num int64) string {
+	is_minus := false
+	if num < 0 {
+		is_minus = true
+		num = num * -1
+	}
+
 	s := fmt.Sprintf("%d", num)
 	fnum := ""
 	pos := 0
@@ -329,6 +335,10 @@ func nfmt(num int64) string {
 		}
 		fnum = fmt.Sprintf("%s%s", string(s[i]), fnum)
 		pos++
+	}
+
+	if is_minus {
+		fnum = "-" + fnum
 	}
 	return fnum
 }
