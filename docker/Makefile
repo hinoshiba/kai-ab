@@ -32,8 +32,8 @@ gobuild: ## build golang
 #	$(DC) exec $(GOLANG) make build-mac
 gotest: ## test golang
 	$(DC) exec $(GOLANG) make test
-godep: ## run golang package manager
-	$(DC) exec $(GOLANG) make dep
+gomod: ## run golang package manager
+	$(DC) exec $(GOLANG) make mod
 goclean: ## clean golang
 	$(DC) exec $(GOLANG) make clean
 

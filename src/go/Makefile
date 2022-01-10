@@ -1,11 +1,11 @@
 PRJ=src/kai-ab
 
-GOENV=GOPATH=$(CURDIR)
+GOENV=
 GOCMD=$(GOENV) go
 GOBUILD=$(GOCMD) install
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
-GODEP=$(GOENV) dep
+GOMOD=$(GOCMD) mod
 
 BUILD_FLGS=-a -tags netgo -installsuffix netgo -ldflags='-extldflags="static"'
 
@@ -15,7 +15,8 @@ BINS := $(shell test -d ./bin && find ./bin/ -type f)
 all: test build ## test & build
 
 build: $(SRCS) ## build to linux binary
-	$(GOBUILD) $(BUILD_FLGS) ./src/kai-ab/exec/...
+	cd $(CURDIR)/$(PRJ); GOOS=linux GOARCH=amd64 $(GOBUILD) $(BUILD_FLGS) ./exec/...
+	cd $(CURDIR)/$(PRJ); GOOS=linux GOARCH=arm64 $(GOBUILD) $(BUILD_FLGS) ./exec/...
 
 .PHONY: test
 test: ## run test
@@ -28,15 +29,16 @@ clean: $(BINS) ## cleanup
 
 xross-build: build build-windows build-mac ## build to windows and mac and linux
 build-windows: ## build to windows binary
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(BUILD_FLGS) ./src/kai-ab/exec/...
+	cd $(CURDIR)/$(PRJ); CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(BUILD_FLGS) ./exec/...
 build-mac: ## build to mac binary
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(BUILD_FLGS) ./src/kai-ab/exec/...
+	cd $(CURDIR)/$(PRJ); CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 $(GOBUILD) $(BUILD_FLGS) ./exec/...
 
-dep: $(CURDIR)/$(PRJ)/Gopkg.toml ## dep ensure
-	cd $(CURDIR)/$(PRJ); $(GODEP) ensure
-	cd $(CURDIR)/$(PRJ); $(GODEP) status
-depinit: ## dep init
-	cd $(CURDIR)/$(PRJ); $(GODEP) init
+mod: $(CURDIR)/$(PRJ)/go.mod ## mod ensure
+	cd $(CURDIR)/$(PRJ); $(GOMOD) tidy
+	cd $(CURDIR)/$(PRJ); $(GOMOD) vendor
+	cd $(CURDIR)/$(PRJ); $(GOMOD) graph
+modinit: ## mod init
+	cd $(CURDIR)/$(PRJ); $(GOMOD) init
 
 .PHONY: help
 	all: help
