@@ -12,7 +12,7 @@ SRCS := $(shell find . -type f)
 all: go ## test & build
 
 build: $(SRCS) ## build to all container
-	$(DC) build
+	DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_DEFAULT_PLATFORM=linux/amd64 $(DC) build
 
 run: $(SRCS) ## start up to all container
 	$(DC) up -d
@@ -28,8 +28,8 @@ go: ## run golang
 	$(DC) exec $(GOLANG) make
 gobuild: ## build golang
 	$(DC) exec $(GOLANG) make build
-#	$(DC) exec $(GOLANG) make build-windows
-#	$(DC) exec $(GOLANG) make build-mac
+	$(DC) exec $(GOLANG) make build-windows
+	$(DC) exec $(GOLANG) make build-mac
 gotest: ## test golang
 	$(DC) exec $(GOLANG) make test
 gomod: ## run golang package manager

@@ -1,18 +1,16 @@
-FROM ubuntu:20.04
+FROM --platform=linux/amd64 ubuntu:20.04 AS builder
 
-ENV GOVERSION 1.17.6
+ENV GOVERSION 1.17.7
 
 ENV GOROOT /opt/go
 ENV GOPATH /go/src
 
 ENV LANG en_US.UTF-8
-ENV http_proxy http://proxy.i.hinoshiba.com:8080/
-ENV https_proxy http://proxy.i.hinoshiba.com:8080/
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt update && \
-    apt install -y git curl wget tzdata make gcc && \
-    apt clean && \
+RUN apt-get update && \
+    apt-get install -y git curl wget tzdata make gcc && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 

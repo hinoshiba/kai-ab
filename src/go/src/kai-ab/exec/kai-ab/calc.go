@@ -59,8 +59,8 @@ func do_calc(name string, srcs []string) (*Report, error) {
 func do_export(path string, ry *Report) error {
 	fpath := path + ".md"
 
-	header := "|項目|01|02|03|04|05|06|07|08|09|10|11|12|\n"
-	header += "|:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n"
+	header := "|項目|01|02|03|04|05|06|07|08|09|10|11|12|合計|平均|\n"
+	header += "|:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n"
 
 	r_in := "|収入|"
 	r_dec := "|支出|"
@@ -68,7 +68,9 @@ func do_export(path string, ry *Report) error {
 
 	keys := ry.Keys()
 	r_ks := make(map[string]string)
-
+	buf_sum_ks := make(map[string]int64)
+	buf_sum_in := int64(0)
+	buf_sum_out := int64(0)
 
 	rms := ry.Childs()
 
@@ -94,18 +96,27 @@ func do_export(path string, ry *Report) error {
 		r_in += fmt.Sprintf("%s|", nfmt(rm.IncSum()))
 		r_dec += fmt.Sprintf("%s|", nfmt(rm.DecSum()))
 		r_sum += fmt.Sprintf("%s|", nfmt(rm.IncSum() + rm.DecSum()))
+		buf_sum_in += rm.IncSum()
+		buf_sum_out += rm.DecSum()
 
 		for _, k := range keys {
 			line, ok := r_ks[k]
 			if !ok {
 				line = fmt.Sprintf("|%s|%s", k, h_padval)
 			}
+			buf, ok := buf_sum_ks[k]
+			if !ok {
+				buf = 0
+			}
+
 			val, ok := rm.GetDetail(k)
 			if !ok {
 				val = 0
 			}
 			line += fmt.Sprintf("%v|", nfmt(val))
+			buf += val
 			r_ks[k] = line
+			buf_sum_ks[k] = buf
 		}
 
 		f_list += "\n### " + rm.Title() + "\n"
@@ -130,9 +141,15 @@ func do_export(path string, ry *Report) error {
 
 	r_str := ry.Title() + "\n===\n\n"
 	r_str += header
-	r_str += r_in + padval + "\n"
-	r_str += r_dec + padval + "\n"
-	r_str += r_sum + padval + "\n"
+
+	buf_sum_sum := (buf_sum_in + buf_sum_out)
+	avg_in := buf_sum_in / int64(len(rms))
+	avg_out := buf_sum_out / int64(len(rms))
+	avg_sum := buf_sum_sum / int64(len(rms))
+
+	r_str += r_in + padval + fmt.Sprintf("%s|%s|", nfmt(buf_sum_in), nfmt(avg_in)) + "\n"
+	r_str += r_dec + padval + fmt.Sprintf("%s|%s|", nfmt(buf_sum_out), nfmt(avg_out)) + "\n"
+	r_str += r_sum + padval + fmt.Sprintf("%s|%s|", nfmt(buf_sum_sum), nfmt(avg_sum)) + "\n"
 	r_str += "## 詳細\n"
 	r_str += header
 
@@ -142,7 +159,9 @@ func do_export(path string, ry *Report) error {
 	}
 	sort.SliceStable(r_ks_idx, func(i, j int) bool { return r_ks_idx[i] < r_ks_idx[j]})
 	for _, k := range r_ks_idx {
-		r_str += r_ks[k] + padval + "\n"
+		sum := buf_sum_ks[k]
+		avg := sum / int64(len(rms))
+		r_str += r_ks[k] + padval + fmt.Sprintf("%s|%s|", nfmt(sum), nfmt(avg)) + "\n"
 	}
 	r_str += f_list
 
