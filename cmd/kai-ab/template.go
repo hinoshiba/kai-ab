@@ -7,8 +7,8 @@ import (
 )
 
 import (
-	"kai-ab/csv"
-	"kai-ab/conf"
+	"github.com/hinoshiba/kai-ab/csv"
+	"github.com/hinoshiba/kai-ab/conf"
 )
 
 func cmd_template(date string) error {

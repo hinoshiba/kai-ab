@@ -1,5 +1,5 @@
-module kai-ab
+module github.com/hinoshiba/kai-ab
 
-go 1.17
+go 1.21.0
 
 require gopkg.in/yaml.v2 v2.4.0
