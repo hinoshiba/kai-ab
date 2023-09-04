@@ -23,7 +23,6 @@ Subcommand
   autofil [<path>]   : Auto categorize row at csv. rule of 'etc/autofil.yaml'.
   mfil [<path>]      : Start the manual filter mode.
   check              : Check the all csv files.
-  calc               : Generate report from csv files.
-`
+  calc               : Generate report from csv files.`
 
 )

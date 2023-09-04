@@ -9,7 +9,7 @@ import (
 )
 
 import (
-	"kai-ab/csv"
+	"github.com/hinoshiba/kai-ab/csv"
 )
 
 const (

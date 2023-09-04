@@ -1,6 +1,4 @@
 *.swp
-/src/go/bin/
+/bin
+/vendor
 *.swp
-/src/go/pkg/
-/src/go/src/kai-ab/vendor/
-/src/go/src/kai-ab/Gopkg.lock
